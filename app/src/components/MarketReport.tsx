@@ -14,7 +14,8 @@ import {
   ChevronUp,
   Star,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  ExternalLink
 } from 'lucide-react';
 import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -37,6 +38,20 @@ const RATING_ICONS: Record<string, React.ReactNode> = {
   'Hold': <AlertTriangle className="h-5 w-5" />,
   'Sell': <TrendingDown className="h-5 w-5" />,
   'Strong Sell': <TrendingDown className="h-5 w-5" />,
+};
+
+// Firm report URLs
+const FIRM_REPORT_URLS: Record<string, string> = {
+  'Goldman Sachs': 'https://www.goldmansachs.com/insights',
+  'Morgan Stanley': 'https://www.morganstanley.com/im/publication/insights',
+  'JP Morgan': 'https://www.jpmorgan.com/insights',
+  'Bank of America': 'https://www.bofaml.com/research',
+  'Citigroup': 'https://www.citigroup.com/citi/investors',
+  'Wells Fargo': 'https://www.wellsfargo.com/com/insights',
+  'Barclays': 'https://www.barclays.com/investment-bank/research',
+  'UBS': 'https://www.ubs.com/global/en/wealth-management/insights',
+  'Deutsche Bank': 'https://www.db.com/news',
+  'Credit Suisse': 'https://www.credit-suisse.com/investors/en/research.html',
 };
 
 export function MarketReport({ report }: MarketReportProps) {
@@ -151,29 +166,35 @@ export function MarketReport({ report }: MarketReportProps) {
           <CollapsibleContent>
             <div className="space-y-2 mt-2">
               {report.recommendations.map((rec, index) => (
-                <div 
-                  key={index} 
-                  className="flex items-center justify-between p-2 rounded-md border hover:bg-accent/50 transition-colors"
+                <a
+                  key={index}
+                  href={FIRM_REPORT_URLS[rec.firm] || `https://www.google.com/search?q=${rec.firm}+research+report`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between p-2 rounded-md border hover:bg-accent/50 transition-colors group"
                 >
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <div className="text-sm font-medium">{rec.firm}</div>
+                      <div className="text-sm font-medium group-hover:text-primary">{rec.firm}</div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Calendar className="h-3 w-3" />
                         {rec.date}
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <Badge className={`text-xs ${RATING_COLORS[rec.rating]}`}>
-                      {rec.rating}
-                    </Badge>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Target: ${rec.priceTarget.toFixed(2)}
+                  <div className="text-right flex items-center gap-2">
+                    <div>
+                      <Badge className={`text-xs ${RATING_COLORS[rec.rating]}`}>
+                        {rec.rating}
+                      </Badge>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Target: ${rec.priceTarget.toFixed(2)}
+                      </div>
                     </div>
+                    <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                </div>
+                </a>
               ))}
             </div>
           </CollapsibleContent>

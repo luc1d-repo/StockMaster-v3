@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStockData } from '@/hooks/useStockData';
+import { useLiveStockData } from '@/hooks/useLiveStockData';
 import { StockChart } from '@/components/StockChart';
 import { NewsFeed } from '@/components/NewsFeed';
 import { TechnicalAnalysis } from '@/components/TechnicalAnalysis';
@@ -7,6 +7,7 @@ import { MarketReport } from '@/components/MarketReport';
 import { Watchlist } from '@/components/Watchlist';
 import { StockInfo } from '@/components/StockInfo';
 import { StockTicker } from '@/components/StockTicker';
+import { FearGreedIndex } from '@/components/FearGreedIndex';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -15,10 +16,11 @@ import {
   TrendingUp, 
   Settings,
   Bell,
-  User
+  User,
+  Clock,
+  Globe
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-
 import { Toaster } from '@/components/ui/sonner';
 import type { StockData } from '@/types/stock';
 
@@ -29,16 +31,16 @@ function App() {
     stockData,
     historicalData,
     news,
-    technicalIndicators,
-    patternSignals,
     marketReport,
     watchlist,
-    activeIndicators,
+    fearGreedIndex,
+    marketHours,
+    companyLogo,
+    fetchData,
     searchStocks,
     addToWatchlist,
     removeFromWatchlist,
-    toggleIndicator,
-  } = useStockData();
+  } = useLiveStockData();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<StockData[]>([]);
@@ -58,7 +60,18 @@ function App() {
     setSelectedSymbol(symbol);
     setSearchQuery('');
     setSearchResults([]);
+    fetchData(symbol);
   };
+
+  // Format current time
+  const currentTime = new Date().toLocaleString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -133,6 +146,18 @@ function App() {
             </div>
           </div>
 
+          {/* Current Time & Market Status */}
+          <div className="hidden md:flex items-center gap-4 mr-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              <span>{currentTime}</span>
+            </div>
+            <div className={`flex items-center gap-2 text-sm ${marketHours.isOpen ? 'text-green-600' : 'text-amber-600'}`}>
+              <Globe className="h-4 w-4" />
+              <span>{marketHours.isOpen ? 'Market Open' : 'Market Closed'}</span>
+            </div>
+          </div>
+
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
@@ -154,8 +179,8 @@ function App() {
       <div className="container py-4 md:py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
           {/* Left Sidebar - Watchlist (Desktop) */}
-          <div className="hidden lg:block lg:col-span-3">
-            <div className="sticky top-20">
+          <div className="hidden lg:block lg:col-span-3 space-y-4">
+            <div className="sticky top-20 space-y-4">
               <Watchlist
                 watchlist={watchlist}
                 selectedSymbol={selectedSymbol}
@@ -163,6 +188,12 @@ function App() {
                 onAddToWatchlist={addToWatchlist}
                 onRemoveFromWatchlist={removeFromWatchlist}
                 onSearch={searchStocks}
+              />
+              {/* Fear & Greed Index */}
+              <FearGreedIndex 
+                value={fearGreedIndex.value} 
+                sentiment={fearGreedIndex.sentiment} 
+                description={fearGreedIndex.description} 
               />
             </div>
           </div>
@@ -172,15 +203,19 @@ function App() {
             {/* Stock Info & Chart Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <div className="md:col-span-1">
-                <StockInfo stock={stockData} />
+                <StockInfo 
+                  stock={stockData} 
+                  logoUrl={companyLogo}
+                  marketHours={marketHours}
+                />
               </div>
               <div className="md:col-span-2">
                 <StockChart 
                   data={historicalData} 
                   symbol={selectedSymbol}
-                  activeIndicators={activeIndicators}
-                  onToggleIndicator={toggleIndicator}
-                  availableIndicators={technicalIndicators}
+                  activeIndicators={[]}
+                  onToggleIndicator={() => {}}
+                  availableIndicators={[]}
                 />
               </div>
             </div>
@@ -188,10 +223,10 @@ function App() {
             {/* Side-by-Side Dashboard: Technical Analysis & News */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               <TechnicalAnalysis 
-                indicators={technicalIndicators}
-                patternSignals={patternSignals}
-                activeIndicators={activeIndicators}
-                onToggleIndicator={toggleIndicator}
+                indicators={[]}
+                patternSignals={[]}
+                activeIndicators={[]}
+                onToggleIndicator={() => {}}
               />
               <NewsFeed news={news} />
             </div>

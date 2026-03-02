@@ -10,14 +10,17 @@ import {
   PieChart,
   Activity,
   Clock,
-  Coins
+  Coins,
+  Globe
 } from 'lucide-react';
 
 interface StockInfoProps {
   stock: StockData | null;
+  logoUrl: string;
+  marketHours: { isOpen: boolean; timeUntil: string };
 }
 
-export function StockInfo({ stock }: StockInfoProps) {
+export function StockInfo({ stock, logoUrl, marketHours }: StockInfoProps) {
   if (!stock) {
     return (
       <Card className="h-full">
@@ -31,7 +34,7 @@ export function StockInfo({ stock }: StockInfoProps) {
   const isCrypto = stock.assetType === 'crypto';
 
   const formatNumber = (num: number | undefined, suffix: string = '') => {
-    if (num === undefined) return 'N/A';
+    if (num === undefined || num === null) return 'N/A';
     if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T${suffix}`;
     if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B${suffix}`;
     if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M${suffix}`;
@@ -39,7 +42,7 @@ export function StockInfo({ stock }: StockInfoProps) {
   };
 
   const formatVolume = (num: number | undefined) => {
-    if (num === undefined) return 'N/A';
+    if (num === undefined || num === null) return 'N/A';
     if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
     if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
     if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
@@ -47,7 +50,7 @@ export function StockInfo({ stock }: StockInfoProps) {
   };
 
   const formatCryptoAmount = (num: number | undefined) => {
-    if (num === undefined) return 'N/A';
+    if (num === undefined || num === null) return 'N/A';
     if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
     if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
     return num.toLocaleString();
@@ -60,8 +63,21 @@ export function StockInfo({ stock }: StockInfoProps) {
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              {isCrypto ? <Coins className="h-6 w-6 text-primary" /> : <Building2 className="h-6 w-6 text-primary" />}
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+              {logoUrl ? (
+                <img 
+                  src={logoUrl} 
+                  alt={stock.symbol} 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    (e.target as HTMLImageElement).parentElement?.querySelector('.fallback-icon')?.classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <div className={`fallback-icon ${logoUrl ? 'hidden' : ''}`}>
+                {isCrypto ? <Coins className="h-6 w-6 text-primary" /> : <Building2 className="h-6 w-6 text-primary" />}
+              </div>
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -92,12 +108,25 @@ export function StockInfo({ stock }: StockInfoProps) {
           )}
         </div>
 
+        {/* Market Hours */}
+        {!isCrypto && (
+          <div className={`flex items-center justify-between p-3 rounded-lg ${marketHours.isOpen ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
+            <div className="flex items-center gap-2">
+              <Globe className={`h-4 w-4 ${marketHours.isOpen ? 'text-green-600' : 'text-amber-600'}`} />
+              <span className={`text-sm font-medium ${marketHours.isOpen ? 'text-green-700' : 'text-amber-700'}`}>
+                {marketHours.isOpen ? 'Market Open' : 'Market Closed'}
+              </span>
+            </div>
+            <span className="text-xs text-muted-foreground">{marketHours.timeUntil}</span>
+          </div>
+        )}
+
         {/* Key Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 rounded-lg border">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <PieChart className="h-4 w-4" />
-              <span className="text-xs">{isCrypto ? 'Market Cap' : 'Market Cap'}</span>
+              <span className="text-xs">Market Cap</span>
             </div>
             <div className="font-semibold">{formatNumber(stock.marketCap)}</div>
           </div>
@@ -187,11 +216,11 @@ export function StockInfo({ stock }: StockInfoProps) {
         {/* Trading Status */}
         <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm">{isCrypto ? '24/7 Trading' : 'Market Open'}</span>
+            <div className={`w-2 h-2 rounded-full ${marketHours.isOpen || isCrypto ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`} />
+            <span className="text-sm">{isCrypto ? '24/7 Trading' : marketHours.isOpen ? 'Market Open' : 'Market Closed'}</span>
           </div>
           <span className="text-xs text-muted-foreground">
-            {isCrypto ? 'Live updates every 2s' : 'Real-time data'}
+            {isCrypto ? 'Live updates every 30s' : marketHours.isOpen ? 'Real-time data' : marketHours.timeUntil}
           </span>
         </div>
       </CardContent>

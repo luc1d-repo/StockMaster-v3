@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { NewsItem } from '@/types/stock';
-import { Globe, Calendar, TrendingUp, TrendingDown, Minus, Search, Filter, MapPin, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Globe, Calendar, TrendingUp, TrendingDown, Minus, Search, Filter, MapPin, Sparkles, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { formatDistanceToNow } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -152,9 +152,17 @@ export function NewsFeed({ news }: NewsFeedProps) {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <h4 className="font-medium text-sm leading-tight mb-1">
+                      {/* Title with link */}
+                      <a 
+                        href={item.url || '#'} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="font-medium text-sm leading-tight mb-1 hover:text-primary hover:underline flex items-center gap-1"
+                      >
                         {item.title}
-                      </h4>
+                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                      </a>
+                      
                       <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
                         {item.summary}
                       </p>
